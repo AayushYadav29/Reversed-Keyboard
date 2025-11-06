@@ -1,17 +1,44 @@
-// Keyboard mapping (reversed layout)
-const keyboardMap = {
-    'a': 'z', 'b': 'y', 'c': 'x', 'd': 'w', 'e': 'v',
-    'f': 'u', 'g': 't', 'h': 's', 'i': 'r', 'j': 'q',
-    'k': 'p', 'l': 'o', 'm': 'n', 'n': 'm', 'o': 'l',
-    'p': 'k', 'q': 'j', 'r': 'i', 's': 'h', 't': 'g',
-    'u': 'f', 'v': 'e', 'w': 'd', 'x': 'c', 'y': 'b',
-    'z': 'a', ' ': ' ', '.': '.', ',': ',', '!': '!',
-    '?': '?', "'": "'", '"': '"', ';': ';', ':': ':',
-    '-': '-', '(': '(', ')': ')'
-};
+// Select keyboard mapping based on page level
+const currentLevel = (document.body && document.body.dataset && document.body.dataset.level === '2') ? 2 : 1;
+
+function getKeyboardMap(level) {
+    // Common punctuation mapping
+    const punctuation = {
+        ' ': ' ', '.': '.', ',': ',', '!': '!', '?': '?',
+        "'": "'", '"': '"', ';': ';', ':': ':', '-': '-', '(': '(', ')': ')'
+    };
+
+    if (level === 2) {
+        // Level 2: shuffled mapping (fixed, non-reversed)
+        const level2Map = {
+            'a': 'q', 'b': 'm', 'c': 'l', 'd': 'a', 'e': 'k',
+            'f': 'z', 'g': 'p', 'h': 's', 'i': 'd', 'j': 'f',
+            'k': 'g', 'l': 'h', 'm': 'j', 'n': 'w', 'o': 'e',
+            'p': 'r', 'q': 't', 'r': 'y', 's': 'u', 't': 'i',
+            'u': 'o', 'v': 'b', 'w': 'c', 'x': 'n', 'y': 'v',
+            'z': 'x'
+        };
+        return { ...level2Map, ...punctuation };
+    }
+
+    // Level 1: reversed mapping (default)
+    const level1Map = {
+        'a': 'z', 'b': 'y', 'c': 'x', 'd': 'w', 'e': 'v',
+        'f': 'u', 'g': 't', 'h': 's', 'i': 'r', 'j': 'q',
+        'k': 'p', 'l': 'o', 'm': 'n', 'n': 'm', 'o': 'l',
+        'p': 'k', 'q': 'j', 'r': 'i', 's': 'h', 't': 'g',
+        'u': 'f', 'v': 'e', 'w': 'd', 'x': 'c', 'y': 'b',
+        'z': 'a'
+    };
+    return { ...level1Map, ...punctuation };
+}
+
+const keyboardMap = getKeyboardMap(currentLevel);
 
 // Sample texts for typing
 const sampleTexts = [
+    "only one",
+
     "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump! The five boxing wizards jump quickly. Sphinx of black quartz, judge my vow.",
     
     "Technology has transformed modern life in countless ways. The rapid advancement of artificial intelligence and machine learning continues to revolutionize industries worldwide. From smartphones to smart homes, digital innovation shapes how we work, communicate, and live our daily lives.",
@@ -35,16 +62,19 @@ const sampleTexts = [
 
 // DOM elements
 const sampleTextElement = document.getElementById('sampleText');
+const sampleTextContentElement = document.getElementById('sampleTextContent');
+const sampleCodeElement = document.getElementById('sampleCode');
 const userInputElement = document.getElementById('userInput');
 const timerElement = document.getElementById('timer');
 const resetButton = document.getElementById('resetBtn');
 const newTextButton = document.getElementById('newTextBtn');
+const themeToggleBtn = document.getElementById('themeToggle');
 
 // Variables for tracking
 let startTime = null;
 let timerInterval = null;
 let isTestActive = false;
-let timeLimit = 60; // 10 minutes in seconds
+let timeLimit = 5; // 10 minutes in seconds
 let typedText = '';
 
 // Analytics tracking
@@ -55,6 +85,58 @@ const analytics = {
     totalAccuracy: 0,
     bestWpm: 0
 };
+
+// ---------- Results helpers (persist across pages) ----------
+function computeMetrics(originalText, typedTextValue, elapsedSeconds) {
+    const accuracy = calculateAccuracy(originalText.toLowerCase(), typedTextValue);
+    const wpm = calculateWPM(typedTextValue, elapsedSeconds);
+    
+    // Calculate based on letters (characters) instead of words
+    const originalLower = originalText.toLowerCase();
+    const typedLower = typedTextValue.toLowerCase();
+    const totalLetters = originalLower.length;
+    
+    // Count correct letters
+    let correctLetters = 0;
+    let wrongLetters = 0;
+    const minLen = Math.min(originalLower.length, typedLower.length);
+    for (let i = 0; i < minLen; i++) {
+        if (originalLower[i] === typedLower[i]) {
+            correctLetters++;
+        } else {
+            wrongLetters++;
+        }
+    }
+    const unattemptedLetters = Math.max(0, totalLetters - minLen);
+    
+    // Completion based on correct letters out of total letters
+    const completion = totalLetters > 0 ? Math.max(0, Math.min(1, correctLetters / totalLetters)) : 0;
+    
+    // Total score factors in both accuracy and completion percentage (both based on letters)
+    const score = Math.round(Math.max(0, Math.min(100, (accuracy * completion))));
+    
+    return { accuracy, wpm, score, elapsedSeconds, correctLetters, wrongLetters, unattemptedLetters, totalLetters, completion };
+}
+
+function saveLevelResult(levelNumber, metrics) {
+    try {
+        localStorage.setItem(`rk_result_level_${levelNumber}`, JSON.stringify(metrics));
+    } catch (_) {}
+}
+
+function readLevelResult(levelNumber) {
+    try {
+        const raw = localStorage.getItem(`rk_result_level_${levelNumber}`);
+        return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+}
+
+function clearLevelResults() {
+    try {
+        localStorage.removeItem('rk_result_level_1');
+        localStorage.removeItem('rk_result_level_2');
+    } catch (_) {}
+}
 
 // Initialize keyboard map display
 function initializeKeyboardMap() {
@@ -72,9 +154,31 @@ function initializeKeyboardMap() {
 
 // Keyboard map is now on a separate page
 
+// ---------- Theme handling ----------
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
+    } else {
+        document.body.removeAttribute('data-theme');
+        if (themeToggleBtn) themeToggleBtn.textContent = '🌙';
+    }
+}
+
+function initTheme() {
+    try {
+        const stored = localStorage.getItem('rk_theme');
+        const theme = stored === 'dark' ? 'dark' : 'light';
+        applyTheme(theme);
+    } catch (_) {
+        applyTheme('light');
+    }
+}
+
 // Function to get a random sample text
 function getRandomText() {
-    return sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
+    const index = Math.floor(Math.random() * sampleTexts.length);
+    return { text: sampleTexts[index], code: `CODE-${String(index + 1).padStart(3, '0')}` };
 }
 
 // Function to start the timer
@@ -95,7 +199,19 @@ function updateTimer() {
         
         if (timeRemaining <= 0) {
             clearInterval(timerInterval);
-            showFinalAnalytics();
+            // End test; compute metrics then show prompt/report
+            const finalText = userInputElement.value;
+            const sample = sampleTextContentElement ? sampleTextContentElement.textContent : sampleTextElement.textContent;
+            const timeElapsed = timeLimit;
+            const metrics = computeMetrics(sample, finalText, timeElapsed);
+            if (currentLevel === 1) {
+                saveLevelResult(1, metrics);
+                showLevel2Prompt();
+            } else {
+                saveLevelResult(2, metrics);
+                showCombinedReport();
+            }
+            isTestActive = false;
             return;
         }
 
@@ -110,33 +226,130 @@ function updateTimer() {
     }
 }
 
-// Function to show final analytics
+// Function to show final analytics (disabled) — replaced by Level 2 prompt on Level 1
 function showFinalAnalytics() {
-    const timeElapsed = timeLimit;
-    const finalText = userInputElement.value;
-    const currentWpm = calculateWPM(finalText, timeElapsed);
-    const currentAccuracy = calculateAccuracy(sampleTextElement.textContent.toLowerCase(), finalText);
-
-    // Update analytics
-    analytics.testsCompleted++;
-    analytics.totalTime += timeElapsed;
-    analytics.totalWpm += currentWpm;
-    analytics.totalAccuracy += currentAccuracy;
-    analytics.bestWpm = Math.max(analytics.bestWpm, currentWpm);
-
-    // Update analytics display
-    document.getElementById('testsCompleted').textContent = analytics.testsCompleted;
-    document.getElementById('averageWpm').textContent = Math.round(analytics.totalWpm / analytics.testsCompleted);
-    document.getElementById('averageAccuracy').textContent = Math.round(analytics.totalAccuracy / analytics.testsCompleted) + '%';
-    
-    const totalMinutes = Math.floor(analytics.totalTime / 60);
-    const totalSeconds = analytics.totalTime % 60;
-    document.getElementById('totalTime').textContent = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
-    document.getElementById('bestWpm').textContent = analytics.bestWpm;
-
-    // Show analytics modal
-    analyticsModal.style.display = "block";
+    // Intentionally no-op
     isTestActive = false;
+}
+
+// Show a simple prompt with only the LEVEL 2 button (Level 1 only)
+function showLevel2Prompt() {
+    const modal = document.getElementById('analyticsModal');
+    if (!modal) return;
+
+    const titleEl = modal.querySelector('h2');
+    if (titleEl) titleEl.textContent = 'Level 1 Results';
+
+    // Show Level 1 analytics in the modal
+    const analyticsContainer = modal.querySelector('.analytics-container');
+    if (analyticsContainer) {
+        analyticsContainer.style.display = 'grid';
+        // Center the single analytics card in Level 1 result view
+        analyticsContainer.style.gridTemplateColumns = '1fr';
+        analyticsContainer.style.justifyItems = 'center';
+        analyticsContainer.style.alignItems = 'center';
+        analyticsContainer.style.margin = '0 auto';
+        const level1 = readLevelResult(1);
+        if (level1) {
+            analyticsContainer.innerHTML = (
+                `<div class="analytics-item">` +
+                `<span class="analytics-label">Level 1</span>` +
+                `<div>Accuracy: ${Math.round(level1.accuracy)}%</div>` +
+                `<div>Correct Letters: ${level1.correctLetters || 0} / ${level1.totalLetters || 0}</div>` +
+                `<div>Wrong Letters: ${level1.wrongLetters || 0} / ${level1.totalLetters || 0}</div>` +
+                `<div>Unattempted Letters: ${level1.unattemptedLetters || 0} / ${level1.totalLetters || 0}</div>` +
+                `<div>WPM: ${Math.round(level1.wpm)}</div>` +
+                `<div>Score: ${Math.round(level1.score)} / 100</div>` +
+                `</div>`
+            );
+        } else {
+            analyticsContainer.innerHTML = (
+                `<div class="analytics-item">` +
+                `<span class="analytics-label">Level 1</span>` +
+                `<div>Not available</div>` +
+                `</div>`
+            );
+        }
+    }
+
+    // Ensure a Level 2 button exists; if not, create a minimal one
+    let level2Btn = document.getElementById('level2Btn');
+    if (!level2Btn) {
+        const controls = document.createElement('div');
+        controls.className = 'controls';
+        level2Btn = document.createElement('a');
+        level2Btn.id = 'level2Btn';
+        level2Btn.className = 'button';
+        level2Btn.href = 'level2.html';
+        level2Btn.textContent = 'LEVEL 2';
+        controls.appendChild(level2Btn);
+        const content = modal.querySelector('.modal-content');
+        if (content) content.appendChild(controls);
+    } else {
+        level2Btn.style.display = 'inline-block';
+    }
+
+    modal.style.display = 'block';
+}
+
+// Build and show combined report for Level 1 and Level 2
+function showCombinedReport() {
+    const modal = document.getElementById('analyticsModal');
+    if (!modal) return;
+
+    const titleEl = modal.querySelector('h2');
+    if (titleEl) titleEl.textContent = 'Level 1 & Level 2 Results';
+
+    const analyticsContainer = modal.querySelector('.analytics-container');
+    if (analyticsContainer) {
+        analyticsContainer.style.display = 'grid';
+        const level1 = readLevelResult(1);
+        const level2 = readLevelResult(2);
+
+        const l1Html = level1
+            ? (
+                `<div class="analytics-item">` +
+                `<span class="analytics-label">Level 1</span>` +
+                `<div>Accuracy: ${Math.round(level1.accuracy)}%</div>` +
+                `<div>Correct Letters: ${level1.correctLetters || 0} / ${level1.totalLetters || 0}</div>` +
+                `<div>Wrong Letters: ${level1.wrongLetters || 0} / ${level1.totalLetters || 0}</div>` +
+                `<div>Unattempted Letters: ${level1.unattemptedLetters || 0} / ${level1.totalLetters || 0}</div>` +
+                `<div>WPM: ${Math.round(level1.wpm)}</div>` +
+                `<div>Score: ${Math.round(level1.score)} / 100</div>` +
+                `</div>`
+            ) : (
+                `<div class="analytics-item">` +
+                `<span class="analytics-label">Level 1</span>` +
+                `<div>Not available</div>` +
+                `</div>`
+            );
+
+        const l2Html = level2
+            ? (
+                `<div class="analytics-item">` +
+                `<span class="analytics-label">Level 2</span>` +
+                `<div>Accuracy: ${Math.round(level2.accuracy)}%</div>` +
+                `<div>Correct Letters: ${level2.correctLetters || 0} / ${level2.totalLetters || 0}</div>` +
+                `<div>Wrong Letters: ${level2.wrongLetters || 0} / ${level2.totalLetters || 0}</div>` +
+                `<div>Unattempted Letters: ${level2.unattemptedLetters || 0} / ${level2.totalLetters || 0}</div>` +
+                `<div>WPM: ${Math.round(level2.wpm)}</div>` +
+                `<div>Score: ${Math.round(level2.score)} / 100</div>` +
+                `</div>`
+            ) : (
+                `<div class="analytics-item">` +
+                `<span class="analytics-label">Level 2</span>` +
+                `<div>Not available</div>` +
+                `</div>`
+            );
+
+        analyticsContainer.innerHTML = l1Html + l2Html;
+    }
+
+    // Hide Level 2 prompt button if present
+    const level2Btn = document.getElementById('level2Btn');
+    if (level2Btn) level2Btn.style.display = 'none';
+
+    modal.style.display = 'block';
 }
 
 // Function to calculate WPM
@@ -173,29 +386,16 @@ function resetTest() {
 function checkCompletion(userInput, sampleText) {
     if (userInput.length === sampleText.length) {
         clearInterval(timerInterval);
+        // Compute metrics
         const timeElapsed = Math.floor((new Date() - startTime) / 1000);
-        const currentWpm = calculateWPM(sampleText, timeElapsed);
-        const currentAccuracy = calculateAccuracy(sampleText.toLowerCase(), userInput);
-
-        // Update analytics
-        analytics.testsCompleted++;
-        analytics.totalTime += timeElapsed;
-        analytics.totalWpm += currentWpm;
-        analytics.totalAccuracy += currentAccuracy;
-        analytics.bestWpm = Math.max(analytics.bestWpm, currentWpm);
-
-        // Update analytics display
-        document.getElementById('testsCompleted').textContent = analytics.testsCompleted;
-        document.getElementById('averageWpm').textContent = Math.round(analytics.totalWpm / analytics.testsCompleted);
-        document.getElementById('averageAccuracy').textContent = Math.round(analytics.totalAccuracy / analytics.testsCompleted) + '%';
-        
-        const totalMinutes = Math.floor(analytics.totalTime / 60);
-        const totalSeconds = analytics.totalTime % 60;
-        document.getElementById('totalTime').textContent = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
-        document.getElementById('bestWpm').textContent = analytics.bestWpm;
-
-        // Automatically show analytics modal
-        analyticsModal.style.display = "block";
+        const metrics = computeMetrics(sampleTextElement.textContent, userInput, timeElapsed);
+        if (currentLevel === 1) {
+            saveLevelResult(1, metrics);
+            showLevel2Prompt();
+        } else {
+            saveLevelResult(2, metrics);
+            showCombinedReport();
+        }
         isTestActive = false;
     }
 }
@@ -217,8 +417,25 @@ userInputElement.addEventListener('input', (e) => {
     typedText = e.target.value;
     
     // Check if the test is complete
-    const sampleText = sampleTextElement.textContent.toLowerCase();
+    const sampleText = (sampleTextContentElement ? sampleTextContentElement.textContent : sampleTextElement.textContent).toLowerCase();
     checkCompletion(e.target.value, sampleText);
+});
+
+// Disable copy/paste on typing area
+userInputElement.addEventListener('paste', (e) => {
+    e.preventDefault();
+});
+userInputElement.addEventListener('copy', (e) => {
+    e.preventDefault();
+});
+userInputElement.addEventListener('drop', (e) => {
+    e.preventDefault();
+});
+userInputElement.addEventListener('keydown', (e) => {
+    const key = (e.key || '').toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && (key === 'v' || key === 'c')) {
+        e.preventDefault();
+    }
 });
 
 // Analytics modal setup
@@ -228,7 +445,10 @@ const closeAnalyticsBtn = document.querySelector('.close-analytics');
 closeAnalyticsBtn.onclick = () => {
     analyticsModal.style.display = "none";
     resetTest();
-    sampleTextElement.textContent = getRandomText();
+    const next = getRandomText();
+    if (sampleTextContentElement) sampleTextContentElement.textContent = next.text;
+    else sampleTextElement.textContent = next.text;
+    if (sampleCodeElement) sampleCodeElement.textContent = next.code;
 };
 
 // Close analytics modal when clicking outside
@@ -238,6 +458,28 @@ window.onclick = (event) => {
     }
 };
 
+// Optional: wire LEVEL 2 button if present
+const level2Btn = document.getElementById('level2Btn');
+if (level2Btn) {
+    level2Btn.addEventListener('click', (e) => {
+        // If it's an anchor, let default proceed; this is just for safety
+        if (level2Btn.tagName.toLowerCase() === 'button') {
+            e.preventDefault();
+            window.location.href = 'level2.html';
+        }
+    });
+}
+
+// Theme toggle button events
+if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem('rk_theme', next); } catch (_) {}
+    });
+}
+
 // Button event listeners
 resetButton.addEventListener('click', () => {
     resetTest();
@@ -246,9 +488,16 @@ resetButton.addEventListener('click', () => {
 
 newTextButton.addEventListener('click', () => {
     resetTest();
-    sampleTextElement.textContent = getRandomText();
+    const next = getRandomText();
+    if (sampleTextContentElement) sampleTextContentElement.textContent = next.text;
+    else sampleTextElement.textContent = next.text;
+    if (sampleCodeElement) sampleCodeElement.textContent = next.code;
     analyticsModal.style.display = "none";
 });
 
 // Initialize
-sampleTextElement.textContent = getRandomText();
+const initRandom = getRandomText();
+if (sampleTextContentElement) sampleTextContentElement.textContent = initRandom.text;
+else sampleTextElement.textContent = initRandom.text;
+if (sampleCodeElement) sampleCodeElement.textContent = initRandom.code;
+initTheme();
