@@ -74,7 +74,7 @@ const themeToggleBtn = document.getElementById('themeToggle');
 let startTime = null;
 let timerInterval = null;
 let isTestActive = false;
-let timeLimit = 5; // 10 minutes in seconds
+let timeLimit = 600; // 10 minutes in seconds
 let typedText = '';
 
 // Analytics tracking
@@ -378,7 +378,7 @@ function resetTest() {
     startTime = null;
     isTestActive = false;
     clearInterval(timerInterval);
-    timerElement.textContent = '01:00';
+    timerElement.textContent = '10:00';
     timerElement.classList.remove('time-warning');
 }
 
