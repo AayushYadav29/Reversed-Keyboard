@@ -39,25 +39,25 @@ const keyboardMap = getKeyboardMap(currentLevel);
 const sampleTexts = [
     "typing is a very useful skill in the modern world. it helps you finish your work faster and communicate better online. when you practice every day, your fingers start to move naturally across the keyboard. soon you will type without looking at the keys at all.",
 
-    "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump! The five boxing wizards jump quickly. Sphinx of black quartz, judge my vow.",
+    "he quick brown fox jumps over the lazy dog. pack my box with five dozen liquor jugs. how vexingly quick daft zebras jump! the five boxing wizards jump quickly. sphinx of black quartz, judge my vow.",
     
-    "Technology has transformed modern life in countless ways. The rapid advancement of artificial intelligence and machine learning continues to revolutionize industries worldwide. From smartphones to smart homes, digital innovation shapes how we work, communicate, and live our daily lives.",
+    "technology has transformed modern life in countless ways. the rapid advancement of artificial intelligence and machine learning continues to revolutionize industries worldwide. from smartphones to smart homes, digital innovation shapes how we work, communicate, and live our daily lives.",
     
-    "In the bustling city square, vendors display their colorful wares as morning sunlight streams between tall buildings. Children laugh and play near the fountain, while business professionals hurry past with steaming cups of coffee. The aroma of fresh bread wafts from nearby bakeries.",
+    "in the bustling city square, vendors display their colorful wares as morning sunlight streams between tall buildings. children laugh and play near the fountain, while business professionals hurry past with steaming cups of coffee. the aroma of fresh bread wafts from nearby bakeries.",
     
-    "Environmental conservation requires global cooperation and immediate action. Scientists worldwide study climate patterns, document species extinction rates, and develop sustainable solutions. Every individual's choices and actions contribute to the planet's future health and biodiversity.",
+    "the internet has changed the way people work and learn. today, most jobs require some amount of typing, whether it’s sending emails or writing reports. that’s why learning to type efficiently is one of the most practical skills you can build.",
     
-    "The ancient library held countless stories within its weathered walls. Dust-covered volumes lined towering shelves, their leather bindings cracked with age. Scholars whispered amongst themselves as they carefully turned fragile pages, discovering long-forgotten knowledge and wisdom.",
+    "success in typing, just like in life, comes from regular practice. even if your speed is low at first, keep going. every small improvement adds up over time, and one day you will notice how fast and accurate you have become.",
     
-    "Physical exercise improves both mental and physical well-being. Regular workouts strengthen muscles, enhance cardiovascular health, and boost immune system function. Additionally, exercise releases endorphins, reduces stress levels, and promotes better sleep patterns throughout the week.",
+    "learning to type takes time, but it is worth the effort. start by focusing on accuracy before speed. once you stop making mistakes, your typing speed will improve automatically. remember to sit straight and keep your wrists relaxed while typing.",
     
-    "The symphony orchestra prepared for their evening performance. Violinists tuned their instruments while the conductor reviewed final notes. In the grand concert hall, anticipation built as the audience members found their seats. The air buzzed with excitement before the first note.",
+    "technology has made our lives easier in many ways. we can study, work, and connect with people from anywhere in the world. knowing how to type well can save time and make you more productive in everything you do online.",
     
-    "Space exploration continues to push the boundaries of human knowledge and capability. Advanced telescopes reveal distant galaxies, while robotic rovers explore Mars's rocky surface. International space stations conduct groundbreaking research, expanding our understanding of the cosmos.",
+    "space exploration continues to push the boundaries of human knowledge and capability. advanced telescopes reveal distant galaxies, while robotic rovers explore mars's rocky surface. international space stations conduct groundbreaking research, expanding our understanding of the cosmos.",
     
-    "Culinary traditions vary dramatically across different cultures and regions. Each country's unique ingredients, cooking methods, and dining customs tell stories of its history and values. Sharing meals brings people together, creating bonds that transcend language and cultural barriers.",
+    "culinary traditions vary dramatically across different cultures and regions. each country's unique ingredients, cooking methods, and dining customs tell stories of its history and values. sharing meals brings people together, creating bonds that transcend language and cultural barriers.",
     
-    "The art museum's new exhibition showcased works from various contemporary artists. Abstract paintings hung alongside intricate sculptures, while digital installations occupied corner spaces. Visitors moved slowly between pieces, contemplating the diverse expressions of human creativity."
+    "the art museum's new exhibition showcased works from various contemporary artists. abstract paintings hung alongside intricate sculptures, while digital installations occupied corner spaces. visitors moved slowly between pieces, contemplating the diverse expressions of human creativity."
 ];
 
 // DOM elements
