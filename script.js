@@ -37,7 +37,7 @@ const keyboardMap = getKeyboardMap(currentLevel);
 
 // Sample texts for typing
 const sampleTexts = [
-    "only one",
+    "typing is a very useful skill in the modern world. it helps you finish your work faster and communicate better online. when you practice every day, your fingers start to move naturally across the keyboard. soon you will type without looking at the keys at all.",
 
     "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump! The five boxing wizards jump quickly. Sphinx of black quartz, judge my vow.",
     
