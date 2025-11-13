@@ -69,12 +69,20 @@ const timerElement = document.getElementById('timer');
 const resetButton = document.getElementById('resetBtn');
 const newTextButton = document.getElementById('newTextBtn');
 const themeToggleBtn = document.getElementById('themeToggle');
+const userGreetingBanner = document.getElementById('userGreetingBanner');
+const userGreetingElement = document.getElementById('userGreeting');
+const changeProfileBtn = document.getElementById('changeProfileBtn');
+const userProfileModal = document.getElementById('userProfileModal');
+const userProfileForm = document.getElementById('userProfileForm');
+const userNameInput = document.getElementById('userName');
+const userGenderSelect = document.getElementById('userGender');
+const userProfileError = document.getElementById('userProfileError');
 
 // Variables for tracking
 let startTime = null;
 let timerInterval = null;
 let isTestActive = false;
-let timeLimit = 600; // 10 minutes in seconds
+let timeLimit = 5; // 10 minutes in seconds
 let typedText = '';
 
 // Analytics tracking
@@ -85,6 +93,106 @@ const analytics = {
     totalAccuracy: 0,
     bestWpm: 0
 };
+const USER_PROFILE_STORAGE_KEY = 'rk_user_profile';
+let userProfileCache = null;
+let resultSummaryElement = null;
+
+function getUserProfile() {
+    if (userProfileCache) return userProfileCache;
+    try {
+        const stored = localStorage.getItem(USER_PROFILE_STORAGE_KEY);
+        userProfileCache = stored ? JSON.parse(stored) : null;
+    } catch (_) {
+        userProfileCache = null;
+    }
+    return userProfileCache;
+}
+
+function saveUserProfile(profile) {
+    userProfileCache = profile;
+    try {
+        localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    } catch (_) {}
+}
+
+function formatGenderLabel(value) {
+    switch (value) {
+        case 'female': return 'Female';
+        case 'male': return 'Male';
+        case 'nonbinary': return 'Non-binary';
+        case 'prefer_not': return 'Prefer not to say';
+        case 'other': return 'Other';
+        default: return '';
+    }
+}
+
+function updateGreetingDisplay() {
+    if (!userGreetingBanner || !userGreetingElement) return;
+    const profile = getUserProfile();
+
+    if (profile) {
+        const genderLabel = formatGenderLabel(profile.gender);
+        const levelLabel = currentLevel === 2 ? 'Level 2' : 'Level 1';
+        userGreetingElement.textContent = `Hello ${profile.name}${genderLabel ? ` (${genderLabel})` : ''}! Welcome to ${levelLabel}.`;
+        userGreetingBanner.classList.remove('hidden');
+        if (changeProfileBtn) changeProfileBtn.style.display = 'inline';
+    } else {
+        userGreetingBanner.classList.add('hidden');
+        if (changeProfileBtn) changeProfileBtn.style.display = 'none';
+    }
+}
+
+function ensureResultSummary(modal) {
+    if (!modal) return null;
+    const content = modal.querySelector('.modal-content');
+    if (!content) return null;
+    if (resultSummaryElement && !content.contains(resultSummaryElement)) {
+        resultSummaryElement = null;
+    }
+    if (!resultSummaryElement) {
+        resultSummaryElement = document.createElement('p');
+        resultSummaryElement.className = 'result-summary';
+        const analyticsContainer = content.querySelector('.analytics-container');
+        content.insertBefore(resultSummaryElement, analyticsContainer);
+    }
+    return resultSummaryElement;
+}
+
+function showUserProfilePrompt() {
+    if (!userProfileModal) return;
+    const profile = getUserProfile();
+    if (userProfileError) userProfileError.textContent = '';
+
+    if (userNameInput) userNameInput.value = profile ? profile.name : '';
+    if (userGenderSelect) {
+        if (profile && profile.gender) {
+            userGenderSelect.value = profile.gender;
+        } else {
+            userGenderSelect.value = '';
+            if (userGenderSelect.options.length > 0) {
+                userGenderSelect.selectedIndex = 0;
+            }
+        }
+    }
+
+    userProfileModal.style.display = 'block';
+    setTimeout(() => {
+        if (userNameInput) userNameInput.focus();
+    }, 50);
+}
+
+function hideUserProfilePrompt() {
+    if (!userProfileModal) return;
+    userProfileModal.style.display = 'none';
+}
+
+function initializeUserProfile() {
+    const profile = getUserProfile();
+    updateGreetingDisplay();
+    if (!profile) {
+        showUserProfilePrompt();
+    }
+}
 
 // ---------- Results helpers (persist across pages) ----------
 function computeMetrics(originalText, typedTextValue, elapsedSeconds) {
@@ -238,7 +346,11 @@ function showLevel2Prompt() {
     if (!modal) return;
 
     const titleEl = modal.querySelector('h2');
-    if (titleEl) titleEl.textContent = 'Level 1 Results';
+    const profile = getUserProfile();
+    if (titleEl) titleEl.textContent = profile ? `Level 1 Results for ${profile.name}` : 'Level 1 Results';
+
+    const summaryEl = ensureResultSummary(modal);
+    if (summaryEl) summaryEl.textContent = profile ? `Great job, ${profile.name}! Ready for Level 2?` : 'Great job! Ready for Level 2?';
 
     // Show Level 1 analytics in the modal
     const analyticsContainer = modal.querySelector('.analytics-container');
@@ -298,7 +410,11 @@ function showCombinedReport() {
     if (!modal) return;
 
     const titleEl = modal.querySelector('h2');
-    if (titleEl) titleEl.textContent = 'Level 1 & Level 2 Results';
+    const profile = getUserProfile();
+    if (titleEl) titleEl.textContent = profile ? `Results for ${profile.name}` : 'Level 1 & Level 2 Results';
+
+    const summaryEl = ensureResultSummary(modal);
+    if (summaryEl) summaryEl.textContent = profile ? `Fantastic work, ${profile.name}! Here is your combined scorecard.` : 'Fantastic work! Here is your combined scorecard.';
 
     const analyticsContainer = modal.querySelector('.analytics-container');
     if (analyticsContainer) {
@@ -406,12 +522,20 @@ userInputElement.addEventListener('input', (e) => {
         startTimer();
     }
 
-    // Only transform the last character typed
-    const inputValue = e.target.value.toLowerCase();
-    if (inputValue.length > 0) {
-        const lastChar = inputValue[inputValue.length - 1];
+    // Normalize to lowercase to match keyboard map
+    const normalizedValue = e.target.value.toLowerCase();
+    if (normalizedValue !== e.target.value) {
+        e.target.value = normalizedValue;
+    }
+
+    const inputType = e.inputType || '';
+    const isDeletion = inputType.startsWith('delete');
+
+    if (!isDeletion && normalizedValue.length > 0) {
+        // Only transform when characters are inserted, not when deleted
+        const lastChar = normalizedValue[normalizedValue.length - 1];
         const mappedChar = keyboardMap[lastChar] || lastChar;
-        e.target.value = inputValue.slice(0, -1) + mappedChar;
+        e.target.value = normalizedValue.slice(0, -1) + mappedChar;
     }
 
     typedText = e.target.value;
@@ -480,6 +604,41 @@ if (themeToggleBtn) {
     });
 }
 
+if (userProfileForm) {
+    userProfileForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!userNameInput || !userGenderSelect) return;
+
+        const name = (userNameInput.value || '').trim();
+        const gender = userGenderSelect.value;
+
+        if (!name) {
+            if (userProfileError) userProfileError.textContent = 'Please enter your name.';
+            userNameInput.focus();
+            return;
+        }
+
+        if (!gender) {
+            if (userProfileError) userProfileError.textContent = 'Please select your gender.';
+            userGenderSelect.focus();
+            return;
+        }
+
+        const profile = { name, gender };
+        saveUserProfile(profile);
+        updateGreetingDisplay();
+        if (userProfileError) userProfileError.textContent = '';
+        hideUserProfilePrompt();
+        if (userInputElement) userInputElement.focus();
+    });
+}
+
+if (changeProfileBtn) {
+    changeProfileBtn.addEventListener('click', () => {
+        showUserProfilePrompt();
+    });
+}
+
 // Button event listeners
 resetButton.addEventListener('click', () => {
     resetTest();
@@ -501,3 +660,4 @@ if (sampleTextContentElement) sampleTextContentElement.textContent = initRandom.
 else sampleTextElement.textContent = initRandom.text;
 if (sampleCodeElement) sampleCodeElement.textContent = initRandom.code;
 initTheme();
+initializeUserProfile();

@@ -610,3 +610,101 @@ body[data-theme="dark"] .key-pair {
     font-weight: 700;
     color: var(--text-primary);
 }
+
+.user-greeting-banner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 12px 18px;
+    box-shadow: 0 4px 20px rgba(31, 45, 61, 0.12);
+    transition: all 0.3s ease;
+}
+
+.user-greeting-banner p {
+    margin: 0;
+    font-size: 1.05em;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.user-greeting-banner.hidden {
+    display: none;
+}
+
+.text-button {
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    text-decoration: underline;
+    box-shadow: none;
+}
+
+.text-button:hover {
+    color: rgba(43, 138, 239, 0.8);
+    transform: none;
+}
+
+.modal-profile {
+    max-width: 500px;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.profile-form label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.profile-form input,
+.profile-form select {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    font-size: 1em;
+    box-shadow: 0 4px 12px rgba(31, 45, 61, 0.08);
+}
+
+.profile-form input:focus,
+.profile-form select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 12px rgba(43, 138, 239, 0.2);
+}
+
+.form-error {
+    color: var(--error-color);
+    min-height: 18px;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.profile-controls {
+    margin-top: 10px;
+}
+
+.profile-controls button {
+    width: 100%;
+}
+
+.result-summary {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.05em;
+    color: var(--text-secondary);
+    font-weight: 600;
+}

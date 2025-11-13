@@ -10,6 +10,11 @@
     <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
     <div class="container">
         <h1>Reversed Keyboard Challenge</h1>
+        <div id="userGreetingBanner" class="user-greeting-banner hidden">
+            <p id="userGreeting"></p>
+            <button id="changeProfileBtn" type="button" class="text-button">Edit Details</button>
+        </div>
+
         <div class="info-box">
             <p style="color: aqua;padding: 10px;">!!!! HERE IS THE CHANGED KEYBOARD MAP !!!!</p>
             <div class="keyboard-map">
@@ -64,6 +69,32 @@
                 <div class="controls" style="margin-top: 25px; justify-content: center;">
                     <a id="level2Btn" class="button" href="level2.html">LEVEL 2</a>
                 </div>
+            </div>
+        </div>
+
+        <div id="userProfileModal" class="modal">
+            <div class="modal-content modal-profile">
+                <h2>Let's get to know you</h2>
+                <form id="userProfileForm" class="profile-form">
+                    <label for="userName">Name</label>
+                    <input type="text" id="userName" name="userName" placeholder="Enter your name" required>
+
+                    <label for="userGender">Gender</label>
+                    <select id="userGender" name="userGender" required>
+                        <option value="" disabled selected>Select gender</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="nonbinary">Non-binary</option>
+                        <option value="prefer_not">Prefer not to say</option>
+                        <option value="other">Other</option>
+                    </select>
+
+                    <p id="userProfileError" class="form-error" aria-live="polite"></p>
+
+                    <div class="controls profile-controls">
+                        <button type="submit">Save &amp; Start</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
