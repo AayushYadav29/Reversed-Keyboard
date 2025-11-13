@@ -82,7 +82,7 @@ const userProfileError = document.getElementById('userProfileError');
 let startTime = null;
 let timerInterval = null;
 let isTestActive = false;
-let timeLimit = 5; // 10 minutes in seconds
+let timeLimit = 600; // 10 minutes in seconds
 let typedText = '';
 
 // Analytics tracking
